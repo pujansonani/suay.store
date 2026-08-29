@@ -33,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
 
   return (
-    <html lang={locale} className={inter.variable}>
+    <html lang={locale} className={inter.variable} data-scroll-behavior="smooth">
       <body className="min-h-dvh antialiased">
         {/* First stop for keyboard and screen-reader users on every page. */}
         <a

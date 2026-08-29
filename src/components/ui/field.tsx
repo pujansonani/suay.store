@@ -13,9 +13,14 @@ import { cn } from "@/lib/utils";
  * when they need to check what the field was for.
  */
 
-let idCounter = 0;
+/**
+ * React's own id generator, which produces the same value on the server and
+ * on the client. A module-level counter does not: the server keeps counting
+ * across requests while the client starts from zero, and the ids drift apart
+ * on hydration.
+ */
 function useFieldId(provided?: string) {
-  const [generated] = React.useState(() => `field-${(idCounter += 1)}`);
+  const generated = React.useId();
   return provided ?? generated;
 }
 
