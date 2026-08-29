@@ -101,7 +101,7 @@ export default async function AdminOverviewPage() {
           ) : (
             <ul className="divide-y divide-line">
               {data.queue.map((clinic) => (
-                <li key={clinic.id} className="flex items-center gap-4 px-5 py-3">
+                <li key={clinic.id} className="flex min-w-0 items-center gap-4 px-5 py-3">
                   <div className="min-w-0 flex-1">
                     <Link
                       href={`/admin/clinics/${clinic.id}`}
@@ -144,9 +144,11 @@ export default async function AdminOverviewPage() {
 
           <ul className="divide-y divide-line">
             {data.recentAudit.map((entry) => (
-              <li key={entry.id} className="px-5 py-3">
+              <li key={entry.id} className="min-w-0 px-5 py-3">
                 <div className="flex items-baseline justify-between gap-3">
-                  <code className="text-[0.75rem] font-medium text-navy-600">{entry.action}</code>
+                  <code className="truncate text-[0.75rem] font-medium text-navy-600">
+                    {entry.action}
+                  </code>
                   <span className="shrink-0 text-[0.6875rem] text-ink-subtle tabular">
                     {formatDate(entry.createdAt, locale, {
                       day: "numeric",

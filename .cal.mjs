@@ -1,0 +1,16 @@
+import { chromium } from 'playwright';
+const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium' });
+const ctx = await b.newContext({ viewport: { width: 1440, height: 900 } });
+await ctx.route('**/*', r => r.request().url().startsWith('http://localhost:3000') ? r.continue() : r.abort());
+const p = await ctx.newPage();
+await p.goto('http://localhost:3000/clinic/login', { waitUntil: 'networkidle' });
+await p.fill('input[name=email]','clinic@demo.suay.store');
+await p.fill('input[name=password]','Demo1234');
+await p.click('button[type=submit]');
+const dl = Date.now()+25000; while (Date.now()<dl && p.url().includes('login')) await p.waitForTimeout(200);
+await p.goto('http://localhost:3000/clinic/calendar', { waitUntil: 'networkidle' });
+await p.waitForTimeout(2000);
+const text = await p.locator('main').innerText();
+console.log('Week shows Veera Suwanna:', text.includes('Veera Suwanna'));
+await p.screenshot({ path: process.env.OUT, fullPage: false });
+await b.close();

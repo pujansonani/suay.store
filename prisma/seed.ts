@@ -472,9 +472,14 @@ async function main() {
   const bookableProviders = built.filter((p) => p.seed.status === "APPROVED");
 
   for (const entry of plan) {
-    // Spread bookings across clinics rather than piling them onto one.
-    for (let offset = 0; offset < 3; offset += 1) {
-      const provider = bookableProviders[(bookingIndex + offset) % bookableProviders.length]!;
+    for (let offset = 0; offset < 4; offset += 1) {
+      // The first clinic is the one the shared demo login opens, so it always
+      // gets a booking — a demo that opens onto an empty calendar shows
+      // nothing. The rest are spread across the other clinics.
+      const provider =
+        offset === 0
+          ? bookableProviders[0]!
+          : bookableProviders[(bookingIndex + offset) % bookableProviders.length]!;
       const key = dateKey(entry.dayOffset);
       const dow = dowOf(key);
 
@@ -498,8 +503,9 @@ async function main() {
       const bufferAfter = serviceSeed.bufferAfterMinutes ?? 10;
       let placed = false;
 
+      const startOffset = offset === 0 ? (bookingIndex * 75) % 300 : (bookingIndex * 45) % 120;
       for (
-        let minute = windowStart + ((bookingIndex * 45) % 120);
+        let minute = windowStart + startOffset;
         minute + serviceSeed.durationMinutes <= windowEnd && !placed;
         minute += 30
       ) {

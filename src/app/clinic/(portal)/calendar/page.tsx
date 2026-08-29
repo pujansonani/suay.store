@@ -12,6 +12,29 @@ function first(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
+/** Monday of the week containing `dateKey`, matching the calendar's layout. */
+function mondayOf(dateKey: string): string {
+  const [y, m, d] = dateKey.split("-").map(Number);
+  const dow = (new Date(Date.UTC(y!, m! - 1, d!)).getUTCDay() + 6) % 7;
+  return addDays(dateKey, -dow);
+}
+
+function fetchRange(anchor: string, view: "day" | "week" | "month") {
+  if (view === "day") {
+    return { from: addDays(anchor, -1), to: addDays(anchor, 1) };
+  }
+  if (view === "week") {
+    const monday = mondayOf(anchor);
+    return { from: addDays(monday, -1), to: addDays(monday, 7) };
+  }
+  // Month view draws a six-week grid starting on the Monday on or before the
+  // first of the month.
+  const [y, m] = anchor.split("-").map(Number);
+  const firstOfMonth = `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-01`;
+  const gridStart = mondayOf(firstOfMonth);
+  return { from: addDays(gridStart, -1), to: addDays(gridStart, 42) };
+}
+
 export default async function ClinicCalendarPage({
   searchParams,
 }: {
@@ -24,10 +47,10 @@ export default async function ClinicCalendarPage({
   const anchor = first(params.date) ?? todayKey();
   const view = (first(params.view) ?? "week") as "day" | "week" | "month";
 
-  // Fetch a window wide enough for whichever view is showing.
-  const span = view === "day" ? 1 : view === "week" ? 9 : 45;
-  const from = addDays(anchor, view === "month" ? -10 : -2);
-  const to = addDays(from, span + 4);
+  // Fetch exactly the range the chosen view renders, plus a day either side.
+  // Deriving it from the anchor alone silently drops appointments: a Saturday
+  // anchor renders Monday-Sunday, and the earlier days fall outside the window.
+  const { from, to } = fetchRange(anchor, view);
 
   const [{ bookings, staff, exceptions, rules }, services] = await Promise.all([
     getClinicCalendar(providerId, from, to),

@@ -185,7 +185,7 @@ function TimeGrid({
   const start = Math.max(0, Math.floor(openMinute / 60) * 60 - 60);
   const end = Math.min(1440, Math.ceil(closeMinute / 60) * 60 + 60);
   const hours = Math.max(1, (end - start) / 60);
-  const pxPerMinute = 0.9;
+  const pxPerMinute = 1.1;
   const height = (end - start) * pxPerMinute;
 
   return (
@@ -280,6 +280,15 @@ function TimeGrid({
                   const lane = overlapping.findIndex((o) => o.id === booking.id);
                   const lanes = Math.max(1, overlapping.length);
 
+                  // Only show as much as fits: a 30-minute block cannot hold
+                  // three lines, and clipped text reads as a rendering fault.
+                  const height = Math.max(
+                    22,
+                    (booking.endMinute - booking.startMinute) * pxPerMinute,
+                  );
+                  const showService = height >= 34;
+                  const showStaff = height >= 50;
+
                   return (
                     <div
                       key={booking.id}
@@ -292,18 +301,24 @@ function TimeGrid({
                       )}
                       style={{
                         top: `${(booking.startMinute - start) * pxPerMinute}px`,
-                        height: `${Math.max(22, (booking.endMinute - booking.startMinute) * pxPerMinute)}px`,
+                        height: `${height}px`,
                         left: `calc(${(lane / lanes) * 100}% + 2px)`,
                         width: `calc(${100 / lanes}% - 4px)`,
                       }}
                       title={`${booking.customerName} · ${booking.serviceName}${booking.staffName ? ` · ${booking.staffName}` : ""}${booking.resources.length ? ` · ${booking.resources.join(", ")}` : ""}`}
                     >
-                      <p className="truncate text-[0.625rem] font-semibold text-navy-700 tabular">
+                      <p className="truncate text-[0.625rem] font-semibold leading-tight text-navy-700 tabular">
                         {minuteLabel(booking.startMinute)} {booking.customerName}
                       </p>
-                      <p className="truncate text-[0.625rem] text-ink-muted">{booking.serviceName}</p>
-                      {booking.staffName && (
-                        <p className="truncate text-[0.625rem] text-ink-subtle">{booking.staffName}</p>
+                      {showService && (
+                        <p className="truncate text-[0.625rem] leading-tight text-ink-muted">
+                          {booking.serviceName}
+                        </p>
+                      )}
+                      {showStaff && booking.staffName && (
+                        <p className="truncate text-[0.625rem] leading-tight text-ink-subtle">
+                          {booking.staffName}
+                        </p>
                       )}
                     </div>
                   );

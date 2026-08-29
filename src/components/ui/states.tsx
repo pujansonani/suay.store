@@ -26,19 +26,23 @@ export function EmptyState({
   description,
   action,
   className,
+  // A state filling a whole page is that page's main heading; one inside a
+  // card is a section heading. The caller says which this is.
+  as: Heading = "h3",
 }: {
   icon?: React.ComponentType<{ className?: string; "aria-hidden"?: boolean }>;
   title: string;
   description?: string;
   action?: React.ReactNode;
   className?: string;
+  as?: "h1" | "h2" | "h3";
 }) {
   return (
     <div className={cn("flex flex-col items-center px-6 py-14 text-center", className)}>
       <div className="mb-4 flex size-11 items-center justify-center rounded-full border border-line bg-surface-muted">
         <Icon aria-hidden className="size-5 text-ink-subtle" />
       </div>
-      <h3 className="text-[0.9375rem] font-semibold text-navy-600">{title}</h3>
+      <Heading className="text-[0.9375rem] font-semibold text-navy-600">{title}</Heading>
       {description && (
         <p className="mt-1.5 max-w-sm text-[0.8125rem] leading-relaxed text-ink-muted">
           {description}
@@ -75,11 +79,13 @@ export function ErrorState({
   description = "Something went wrong on our side. Please try again.",
   action,
   variant = "server",
+  as,
 }: {
   title?: string;
   description?: string;
   action?: React.ReactNode;
   variant?: "server" | "network" | "forbidden" | "unauthorized" | "warning";
+  as?: "h1" | "h2" | "h3";
 }) {
   const icons = {
     server: ServerCrash,
@@ -88,7 +94,9 @@ export function ErrorState({
     unauthorized: Lock,
     warning: AlertTriangle,
   };
-  return <EmptyState icon={icons[variant]} title={title} description={description} action={action} />;
+  return (
+    <EmptyState icon={icons[variant]} title={title} description={description} action={action} as={as} />
+  );
 }
 
 /** Full-page state used by the `forbidden` and `not-found` routes. */
@@ -108,6 +116,7 @@ export function FullPageState({
   return (
     <div className="container-page flex min-h-[60vh] items-center justify-center py-16">
       <ErrorState
+        as="h1"
         variant={variant}
         title={title}
         description={description}
