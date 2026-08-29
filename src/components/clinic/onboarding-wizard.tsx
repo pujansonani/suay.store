@@ -88,7 +88,17 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  async function post(url: string, method: string, body: unknown): Promise<boolean> {
+  /**
+   * `refresh` is skipped when the caller is about to navigate: refreshing the
+   * current route re-runs this page's server guard, which now redirects, and
+   * that in-flight request cancels the navigation we actually want.
+   */
+  async function post(
+    url: string,
+    method: string,
+    body: unknown,
+    options: { refresh?: boolean } = {},
+  ): Promise<boolean> {
     setPending(true);
     setError(null);
     try {
@@ -103,7 +113,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
         if (payload?.error?.details?.missing) setMissing(payload.error.details.missing);
         return false;
       }
-      router.refresh();
+      if (options.refresh !== false) router.refresh();
       return true;
     } catch {
       setError("We could not reach the server. Please try again.");
@@ -152,11 +162,8 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
 
   async function submit() {
     setMissing([]);
-    const ok = await post("/api/clinic/submit", "POST", {});
-    if (ok) {
-      router.push("/clinic/status");
-      router.refresh();
-    }
+    const ok = await post("/api/clinic/submit", "POST", {}, { refresh: false });
+    if (ok) router.replace("/clinic/status");
   }
 
   return (

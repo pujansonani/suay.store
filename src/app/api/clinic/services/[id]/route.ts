@@ -6,6 +6,13 @@ import { recordAudit } from "@/lib/audit";
 import { serviceSchema } from "@/lib/validation";
 
 /**
+ * A clinic must be able to enter its treatments, practitioners, rooms and
+ * opening hours *before* it is approved — that is what the registration flow
+ * asks it to do. Suspended and deactivated clinics are still refused.
+ */
+const SETUP = { allowUnapproved: true } as const;
+
+/**
  * Update a treatment.
  *
  * The lookup is `findFirst({ id, providerId })` rather than `findUnique({ id })`
@@ -13,7 +20,7 @@ import { serviceSchema } from "@/lib/validation";
  * only that they do not have access.
  */
 export const PATCH = handler(async (request: Request, context: { params: Promise<{ id: string }> }) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const { id } = await context.params;
   const input = await parseBody(request, serviceSchema);
 
@@ -89,7 +96,7 @@ export const PATCH = handler(async (request: Request, context: { params: Promise
  * would take the appointment history with it.
  */
 export const DELETE = handler(async (_request: Request, context: { params: Promise<{ id: string }> }) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const { id } = await context.params;
 
   const service = await prisma.service.findFirst({

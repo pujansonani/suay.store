@@ -7,6 +7,13 @@ import { scheduleExceptionSchema } from "@/lib/validation";
 import { dateKeyToDateColumn } from "@/lib/time";
 
 /**
+ * A clinic must be able to enter its treatments, practitioners, rooms and
+ * opening hours *before* it is approved — that is what the registration flow
+ * asks it to do. Suspended and deactivated clinics are still refused.
+ */
+const SETUP = { allowUnapproved: true } as const;
+
+/**
  * Add a closure, a modified day or a block of time off.
  *
  * Existing bookings are never removed by this: an exception that covers a
@@ -14,7 +21,7 @@ import { dateKeyToDateColumn } from "@/lib/time";
  * already in the diary so it can deal with those appointments deliberately.
  */
 export const POST = handler(async (request: Request) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const input = await parseBody(request, scheduleExceptionSchema);
 
   if (input.type !== "CLOSED") {

@@ -5,8 +5,15 @@ import { ConflictError, ForbiddenError } from "@/lib/errors";
 import { recordAudit } from "@/lib/audit";
 import { staffSchema } from "@/lib/validation";
 
+/**
+ * A clinic must be able to enter its treatments, practitioners, rooms and
+ * opening hours *before* it is approved — that is what the registration flow
+ * asks it to do. Suspended and deactivated clinics are still refused.
+ */
+const SETUP = { allowUnapproved: true } as const;
+
 export const PATCH = handler(async (request: Request, context: { params: Promise<{ id: string }> }) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const { id } = await context.params;
   const input = await parseBody(request, staffSchema);
 
@@ -58,7 +65,7 @@ export const PATCH = handler(async (request: Request, context: { params: Promise
 });
 
 export const DELETE = handler(async (_request: Request, context: { params: Promise<{ id: string }> }) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const { id } = await context.params;
 
   const member = await prisma.staff.findFirst({

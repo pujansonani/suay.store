@@ -6,8 +6,15 @@ import { recordAudit } from "@/lib/audit";
 import { scheduleRuleSchema } from "@/lib/validation";
 import { getClinicSchedule } from "@/lib/data/clinic";
 
+/**
+ * A clinic must be able to enter its treatments, practitioners, rooms and
+ * opening hours *before* it is approved — that is what the registration flow
+ * asks it to do. Suspended and deactivated clinics are still refused.
+ */
+const SETUP = { allowUnapproved: true } as const;
+
 export const GET = handler(async () => {
-  const { providerId } = await requireClinicMember();
+  const { providerId } = await requireClinicMember(SETUP);
   return ok(await getClinicSchedule(providerId));
 });
 
@@ -19,7 +26,7 @@ export const GET = handler(async () => {
  * against this clinic before anything is written.
  */
 export const PUT = handler(async (request: Request) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const { rules } = await parseBody(request, scheduleRuleSchema);
 
   for (const rule of rules) {

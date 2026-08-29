@@ -5,13 +5,20 @@ import { recordAudit } from "@/lib/audit";
 import { staffSchema } from "@/lib/validation";
 import { getClinicStaff } from "@/lib/data/clinic";
 
+/**
+ * A clinic must be able to enter its treatments, practitioners, rooms and
+ * opening hours *before* it is approved — that is what the registration flow
+ * asks it to do. Suspended and deactivated clinics are still refused.
+ */
+const SETUP = { allowUnapproved: true } as const;
+
 export const GET = handler(async () => {
-  const { providerId } = await requireClinicMember();
+  const { providerId } = await requireClinicMember(SETUP);
   return ok({ staff: await getClinicStaff(providerId) });
 });
 
 export const POST = handler(async (request: Request) => {
-  const { providerId, user } = await requireClinicMember();
+  const { providerId, user } = await requireClinicMember(SETUP);
   const input = await parseBody(request, staffSchema);
 
   const services = await prisma.service.findMany({
