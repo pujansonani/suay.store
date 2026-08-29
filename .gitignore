@@ -14,3 +14,7 @@ yarn-error.log*
 next-env.d.ts
 coverage
 .shot.mjs
+# Ad-hoc browser scripts used while developing
+.audit.mjs
+.ov*.mjs
+.e2e*.mjs
