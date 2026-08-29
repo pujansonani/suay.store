@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Suay design tokens
+
+   A clinical palette: warm white ground, white surfaces, deep navy for
+   structure and headings, restrained teal reserved for actions, links and
+   verification. Status colours are muted and used only to carry status —
+   never as decoration.
+--------------------------------------------------------------------------- */
+
+@theme {
+  --color-navy-50: #eef3f5;
+  --color-navy-100: #d6e1e6;
+  --color-navy-200: #adc3cb;
+  --color-navy-300: #7d9ba7;
+  --color-navy-400: #4a7183;
+  --color-navy-500: #2b5568;
+  --color-navy-600: #163a4a;
+  --color-navy-700: #123040;
+  --color-navy-800: #0e2632;
+  --color-navy-900: #0a1b24;
+
+  --color-teal-50: #eef5f4;
+  --color-teal-100: #d5e7e5;
+  --color-teal-200: #a9cecb;
+  --color-teal-300: #76b0ac;
+  --color-teal-400: #4a918d;
+  --color-teal-500: #2d7775;
+  --color-teal-600: #266462;
+  --color-teal-700: #1f5150;
+  --color-teal-800: #193f3e;
+  --color-teal-900: #132f2e;
+
+  --color-canvas: #f8faf9;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f2f6f5;
+  --color-ink: #162126;
+  --color-ink-muted: #647277;
+  --color-ink-subtle: #8b979b;
+  --color-line: #dde5e4;
+  --color-line-strong: #c6d3d1;
+
+  --color-success: #39765f;
+  --color-success-bg: #eaf3ef;
+  --color-warning: #a77a35;
+  --color-warning-bg: #f8f1e6;
+  --color-danger: #b04e4e;
+  --color-danger-bg: #f8eded;
+  --color-info: #2d7775;
+  --color-info-bg: #eaf3f2;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Thai", sans-serif;
+
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  /* Shadows stay close to the surface. Depth is communicated by borders. */
+  --shadow-card: 0 1px 2px rgba(22, 33, 38, 0.04), 0 1px 3px rgba(22, 33, 38, 0.03);
+  --shadow-raised: 0 2px 4px rgba(22, 33, 38, 0.05), 0 4px 12px rgba(22, 33, 38, 0.05);
+  --shadow-overlay: 0 8px 32px rgba(14, 38, 50, 0.12);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-line);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 0.9375rem;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-navy-600);
+    font-weight: 600;
+    letter-spacing: -0.011em;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  /* A single, unmistakable focus treatment everywhere. Keyboard users should
+     never have to hunt for where they are. */
+  :focus-visible {
+    outline: 2px solid var(--color-teal-500);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-teal-100);
+    color: var(--color-navy-700);
+  }
+
+  /* Numeric alignment in tables of prices, times and counts. */
+  table, .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  [hidden] { display: none !important; }
+}
+
+@layer utilities {
+  .container-page {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 768px) {
+    .container-page { padding-inline: 2rem; }
+  }
+
+  .text-balance { text-wrap: balance; }
+  .text-pretty { text-wrap: pretty; }
+
+  /* Visible only to screen readers, until focused. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--color-surface-muted) 25%,
+      #e8eeed 37%,
+      var(--color-surface-muted) 63%
+    );
+    background-size: 400% 100%;
+    animation: skeleton-sweep 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes skeleton-sweep {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* The product should be usable, and calm, for people who have asked their
+   system to reduce motion. Non-essential animation is removed entirely. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton { animation: none; }
+}

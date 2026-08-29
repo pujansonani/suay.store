@@ -1,0 +1,928 @@
+// Suay.store — data model
+//
+// Tenancy: `Provider` (a clinic) is the tenant boundary. Every clinic-owned
+// entity carries `providerId` so that ownership can be enforced in a single
+// `where` clause at the data-access layer. See docs/authorization.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum UserRole {
+  CUSTOMER
+  CLINIC_ADMIN
+  CLINIC_STAFF
+  PLATFORM_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum Locale {
+  en
+  th
+  ja
+}
+
+/// Lifecycle of a clinic on the platform.
+/// Only APPROVED + published clinics are ever visible to the public.
+enum ProviderStatus {
+  DRAFT
+  PENDING_REVIEW
+  CHANGES_REQUESTED
+  APPROVED
+  REJECTED
+  SUSPENDED
+  DEACTIVATED
+}
+
+enum VerificationStatus {
+  NOT_SUBMITTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+/// Drives how a service may be presented. Medical/aesthetic services never
+/// receive promotional treatment in the UI.
+enum ServiceClass {
+  WELLNESS
+  AESTHETIC
+  MEDICAL_AESTHETIC
+  MEDICAL
+}
+
+enum ResourceType {
+  ROOM
+  EQUIPMENT
+}
+
+enum ScheduleOwnerType {
+  PROVIDER
+  STAFF
+}
+
+enum ScheduleExceptionType {
+  CLOSED
+  MODIFIED_HOURS
+  TIME_OFF
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  EXPIRED
+  NO_SHOW
+  REJECTED
+}
+
+enum BookingChannel {
+  MARKETPLACE
+  PROVIDER_MANUAL
+  WALK_IN
+  PHONE
+  LINE
+}
+
+enum AttributionSource {
+  MARKETPLACE_DISCOVERY
+  DIRECT_PROVIDER_LINK
+  BRAND_SEARCH
+  RETURNING_CUSTOMER
+  PROVIDER_MANUAL
+}
+
+enum ActorRole {
+  CUSTOMER
+  PROVIDER
+  ADMIN
+  SYSTEM
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  CAPTURED
+  FAILED
+  CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  PROMPTPAY
+  PAY_AT_CLINIC
+}
+
+enum ReviewStatus {
+  PUBLISHED
+  PENDING_MODERATION
+  REMOVED
+}
+
+enum NotificationChannel {
+  LINE
+  EMAIL
+  IN_APP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
+}
+
+enum NotificationEvent {
+  BOOKING_CREATED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  BOOKING_CONFIRMED
+  BOOKING_REJECTED
+  BOOKING_CANCELLED
+  BOOKING_RESCHEDULED
+  APPOINTMENT_REMINDER
+  CLINIC_APPROVED
+  CLINIC_REJECTED
+  CLINIC_CHANGES_REQUESTED
+  CLINIC_SUSPENDED
+}
+
+enum ModerationStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum PayoutStatus {
+  DRAFT
+  PENDING
+  PAID
+  FAILED
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+model User {
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?
+  name          String
+  phone         String?
+  role          UserRole   @default(CUSTOMER)
+  status        UserStatus @default(ACTIVE)
+  locale        Locale     @default(en)
+  lineUserId    String?    @unique
+  emailVerified Boolean    @default(false)
+  lastLoginAt   DateTime? @db.Timestamptz(3)
+
+  /// Set for CLINIC_ADMIN / CLINIC_STAFF only. This is the tenant claim that
+  /// every provider-scoped query is filtered by. It is read from the session,
+  /// never from the request body.
+  providerId String?
+  provider   Provider? @relation("ProviderMembers", fields: [providerId], references: [id], onDelete: Cascade)
+
+  bookings          Booking[]          @relation("CustomerBookings")
+  reviews           Review[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]         @relation("AuditActor")
+  providerCustomers ProviderCustomer[]
+  staffProfile      Staff?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([role])
+  @@index([providerId])
+  @@index([status])
+}
+
+// ---------------------------------------------------------------------------
+// Tenant: clinic / provider
+// ---------------------------------------------------------------------------
+
+model Provider {
+  id          String @id @default(cuid())
+  slug        String @unique
+  name        String
+  legalName   String?
+  description String? @db.Text
+  specialty   String?
+  tagline     String?
+
+  email   String?
+  phone   String?
+  website String?
+  lineId  String?
+
+  addressLine1 String?
+  addressLine2 String?
+  district     String?
+  city         String  @default("Bangkok")
+  postalCode   String?
+  country      String  @default("TH")
+  latitude     Float?
+  longitude    Float?
+
+  coverImageUrl String?
+  logoImageUrl  String?
+  galleryUrls   String[] @default([])
+
+  timezone String @default("Asia/Bangkok")
+  currency String @default("THB")
+
+  status ProviderStatus @default(DRAFT)
+  /// Publication is a separate switch from approval: an approved clinic may
+  /// still choose to be unpublished. Public listings require both.
+  published Boolean @default(false)
+
+  /// Progress marker for the multi-step registration wizard.
+  onboardingStep Int @default(1)
+
+  verificationStatus VerificationStatus @default(NOT_SUBMITTED)
+  submittedAt        DateTime? @db.Timestamptz(3)
+  reviewedAt         DateTime? @db.Timestamptz(3)
+  reviewedById       String?
+  reviewNote         String? @db.Text
+  suspendedAt        DateTime? @db.Timestamptz(3)
+  suspensionReason   String? @db.Text
+
+  cancellationPolicy String? @db.Text
+  bookingPolicy      String? @db.Text
+  /// Hours before the appointment during which a customer may still cancel
+  /// free of charge. Null falls back to the platform default.
+  cancellationWindowHours Int?
+
+  ratingAverage Float @default(0)
+  ratingCount   Int   @default(0)
+
+  members            User[]              @relation("ProviderMembers")
+  services           Service[]
+  staff              Staff[]
+  resources          Resource[]
+  scheduleRules      ScheduleRule[]
+  scheduleExceptions ScheduleException[]
+  bookings           Booking[]
+  payments           Payment[]
+  reviews            Review[]
+  customers          ProviderCustomer[]
+  verification       ProviderVerification?
+  payoutBatches      PayoutBatch[]
+  moderationCases    ModerationCase[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([status, published])
+  @@index([city, district])
+  @@index([ratingAverage])
+}
+
+/// Business/credential information submitted for review. Deliberately holds
+/// references and reviewer notes rather than uploaded identity documents.
+model ProviderVerification {
+  id         String   @id @default(cuid())
+  providerId String   @unique
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  businessRegistrationNo String?
+  taxId                  String?
+  medicalLicenseNo       String?
+  licenceAuthority       String?
+  contactPersonName      String?
+  contactPersonRole      String?
+  contactPersonPhone     String?
+  contactPersonEmail     String?
+  /// Names/labels of supporting documents. No files are stored in this build.
+  documentRefs           String[] @default([])
+  notes                  String?  @db.Text
+
+  status      VerificationStatus @default(NOT_SUBMITTED)
+  submittedAt DateTime? @db.Timestamptz(3)
+  reviewedAt  DateTime? @db.Timestamptz(3)
+  reviewNote  String?            @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+// ---------------------------------------------------------------------------
+// Catalogue
+// ---------------------------------------------------------------------------
+
+model Category {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  nameTh      String?
+  nameJa      String?
+  description String?
+  sortOrder   Int       @default(0)
+  services    Service[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
+
+model Service {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  categoryId String?
+  category   Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  slug        String
+  name        String
+  description String? @db.Text
+  /// Preparation / aftercare / eligibility notes shown before booking.
+  importantInfo String? @db.Text
+
+  serviceClass       ServiceClass @default(AESTHETIC)
+  isMedicalAesthetic Boolean      @default(false)
+
+  durationMinutes     Int
+  bufferBeforeMinutes Int @default(0)
+  bufferAfterMinutes  Int @default(10)
+
+  /// Minor units (satang). 150000 = ฿1,500.00
+  priceMinor Int
+  currency   String @default("THB")
+
+  /// When true a specific practitioner must be assigned for the booking.
+  requiresStaff Boolean @default(true)
+
+  active   Boolean @default(true)
+  imageUrl String?
+  sortOrder Int    @default(0)
+
+  resourceRequirements ServiceResourceRequirement[]
+  staffLinks           StaffService[]
+  bookings             Booking[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([providerId, slug])
+  @@index([providerId, active])
+  @@index([categoryId])
+  @@index([priceMinor])
+}
+
+/// "This treatment needs 1 treatment room and 1 laser unit."
+/// Availability is only offered when every requirement can be satisfied.
+model ServiceResourceRequirement {
+  id        String @id @default(cuid())
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  resourceType ResourceType
+  /// Optional narrowing: only resources carrying this tag can satisfy it
+  /// (e.g. "laser", "treatment-room").
+  resourceTag  String?
+  quantity     Int    @default(1)
+
+  @@index([serviceId])
+}
+
+model Staff {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  /// Optional login for the practitioner (CLINIC_STAFF role).
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name  String
+  role  String
+  bio   String? @db.Text
+  photoUrl String?
+
+  /// Demo data only — see docs. Never presented as a verified licence.
+  credentials     String[] @default([])
+  qualifications  String[] @default([])
+  specializations String[] @default([])
+  languages       String[] @default([])
+  yearsExperience Int?
+  /// True only when a platform admin has actually reviewed the practitioner.
+  verified   Boolean @default(false)
+  verifiedAt DateTime? @db.Timestamptz(3)
+
+  active    Boolean @default(true)
+  sortOrder Int     @default(0)
+
+  services           StaffService[]
+  scheduleRules      ScheduleRule[]
+  scheduleExceptions ScheduleException[]
+  bookingAssignments BookingStaffAssignment[]
+  bookings           Booking[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, active])
+}
+
+model StaffService {
+  staffId   String
+  serviceId String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@id([staffId, serviceId])
+  @@index([serviceId])
+}
+
+model Resource {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  name String
+  type ResourceType
+  /// Matched against ServiceResourceRequirement.resourceTag.
+  tag  String?
+  notes String?
+  active Boolean @default(true)
+
+  bookingAssignments BookingResourceAssignment[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, type, active])
+}
+
+// ---------------------------------------------------------------------------
+// Schedule
+// ---------------------------------------------------------------------------
+
+/// A recurring weekly opening period. Multiple rows per weekday express split
+/// shifts, e.g. 10:00–14:00 and 16:00–21:00.
+model ScheduleRule {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  ownerType ScheduleOwnerType @default(PROVIDER)
+  staffId   String?
+  staff     Staff?            @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  /// 0 = Sunday … 6 = Saturday, in the provider's timezone.
+  dayOfWeek   Int
+  /// Minutes from local midnight. Half-open: [startMinute, endMinute).
+  startMinute Int
+  endMinute   Int
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, dayOfWeek])
+  @@index([staffId, dayOfWeek])
+}
+
+/// A one-off deviation: a public holiday, a half day, a practitioner's leave,
+/// or a block of time the clinic reserved for itself.
+model ScheduleException {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  /// Null = applies to the whole clinic. Set = applies to one practitioner.
+  staffId String?
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  /// Local calendar date, stored as YYYY-MM-DD at UTC midnight.
+  date DateTime @db.Date
+  type ScheduleExceptionType
+
+  /// Only used by MODIFIED_HOURS and TIME_OFF. Minutes from local midnight.
+  startMinute Int?
+  endMinute   Int?
+
+  reason String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, date])
+  @@index([staffId, date])
+}
+
+// ---------------------------------------------------------------------------
+// Bookings
+// ---------------------------------------------------------------------------
+
+model Booking {
+  id        String @id @default(cuid())
+  reference String @unique
+
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  serviceId  String
+  service    Service  @relation(fields: [serviceId], references: [id])
+
+  /// Platform customer. Null for walk-in / phone bookings entered by staff.
+  customerId String?
+  customer   User?   @relation("CustomerBookings", fields: [customerId], references: [id], onDelete: SetNull)
+
+  /// Clinic-owned customer record. Always present.
+  providerCustomerId String?
+  providerCustomer   ProviderCustomer? @relation(fields: [providerCustomerId], references: [id], onDelete: SetNull)
+
+  /// Primary practitioner. Mirrors the staff assignment row for easy querying.
+  staffId String?
+  staff   Staff?  @relation(fields: [staffId], references: [id], onDelete: SetNull)
+
+  status  BookingStatus  @default(PENDING_PAYMENT)
+  channel BookingChannel @default(MARKETPLACE)
+
+  /// The appointment itself, half-open [startAt, endAt).
+  startAt DateTime @db.Timestamptz(3)
+  endAt   DateTime @db.Timestamptz(3)
+  /// The appointment plus buffers. This is the interval that occupies staff
+  /// and resources and that the exclusion constraints are built on.
+  blockStartAt DateTime @db.Timestamptz(3)
+  blockEndAt   DateTime @db.Timestamptz(3)
+
+  durationMinutes Int
+  timezone        String @default("Asia/Bangkok")
+
+  priceMinor Int
+  currency   String @default("THB")
+
+  /// Set while status is PENDING_PAYMENT. Past this instant the hold is
+  /// released and the slot returns to the pool.
+  holdExpiresAt DateTime? @db.Timestamptz(3)
+
+  customerName  String
+  customerEmail String?
+  customerPhone String?
+  customerNote  String? @db.Text
+
+  confirmedAt DateTime? @db.Timestamptz(3)
+  completedAt DateTime? @db.Timestamptz(3)
+
+  cancelledAt     DateTime? @db.Timestamptz(3)
+  cancelledById   String?
+  cancelledByRole ActorRole?
+  cancelReason    String?    @db.Text
+
+  rescheduledFromId String?
+  rescheduleCount   Int    @default(0)
+
+  staffAssignments    BookingStaffAssignment[]
+  resourceAssignments BookingResourceAssignment[]
+  statusHistory       BookingStatusHistory[]
+  payments            Payment[]
+  review              Review?
+  attribution         BookingAttribution?
+  payoutLines         PayoutLine[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, startAt])
+  @@index([providerId, status])
+  @@index([customerId, startAt])
+  @@index([status, holdExpiresAt])
+  @@index([serviceId])
+}
+
+/// Occupancy row for a practitioner. A PostgreSQL exclusion constraint over
+/// (staffId, tstzrange(blockStartAt, blockEndAt)) WHERE active makes
+/// overlapping active rows impossible — this is what actually prevents
+/// double booking. See prisma/migrations/*_booking_exclusion_constraints.
+model BookingStaffAssignment {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  staffId   String
+  staff     Staff   @relation(fields: [staffId], references: [id], onDelete: Cascade)
+
+  blockStartAt DateTime @db.Timestamptz(3)
+  blockEndAt   DateTime @db.Timestamptz(3)
+  /// Cleared when the booking is cancelled/expired, releasing the slot.
+  active       Boolean  @default(true)
+
+  @@unique([bookingId, staffId])
+  @@index([staffId, active])
+}
+
+/// Occupancy row for a room or piece of equipment. Same exclusion strategy.
+model BookingResourceAssignment {
+  id         String   @id @default(cuid())
+  bookingId  String
+  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  resourceId String
+  resource   Resource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+
+  blockStartAt DateTime @db.Timestamptz(3)
+  blockEndAt   DateTime @db.Timestamptz(3)
+  active       Boolean  @default(true)
+
+  @@unique([bookingId, resourceId])
+  @@index([resourceId, active])
+}
+
+model BookingStatusHistory {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  fromStatus BookingStatus?
+  toStatus   BookingStatus
+  actorId    String?
+  actorRole  ActorRole      @default(SYSTEM)
+  reason     String?
+  metadata   Json?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([bookingId, createdAt])
+}
+
+/// Where the booking came from. Recorded for future commission rules; no
+/// commercial logic depends on it yet.
+model BookingAttribution {
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  source        AttributionSource
+  referrer      String?
+  landingPath   String?
+  campaign      String?
+  isFirstBookingWithProvider Boolean @default(false)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+/// A clinic's own customer record. Belongs to exactly one clinic and is never
+/// shared between clinics, even when it links to the same platform user.
+model ProviderCustomer {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  /// Optional link to a marketplace account.
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name   String
+  email  String?
+  phone  String?
+  lineId String?
+  notes  String? @db.Text
+
+  bookings Booking[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@unique([providerId, userId])
+  @@index([providerId])
+  @@index([providerId, email])
+}
+
+// ---------------------------------------------------------------------------
+// Payments
+// ---------------------------------------------------------------------------
+
+model Payment {
+  id        String  @id @default(cuid())
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  /// Denormalised for tenant scoping — a clinic reads payments by providerId.
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  gateway  String        @default("mock")
+  method   PaymentMethod @default(CARD)
+  status   PaymentStatus @default(PENDING)
+
+  amountMinor         Int
+  capturedAmountMinor Int    @default(0)
+  refundedAmountMinor Int    @default(0)
+  currency            String @default("THB")
+
+  /// Gateway-side identifiers. No card data is ever stored.
+  externalChargeId String?
+  externalRef      String?
+  /// Non-sensitive display hint, e.g. "•••• 4242" or "PromptPay".
+  displayLabel     String?
+  qrPayload        String?
+
+  failureCode    String?
+  failureMessage String?
+
+  authorizedAt DateTime? @db.Timestamptz(3)
+  capturedAt   DateTime? @db.Timestamptz(3)
+  failedAt     DateTime? @db.Timestamptz(3)
+  refundedAt   DateTime? @db.Timestamptz(3)
+
+  events PaymentEvent[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, status])
+  @@index([bookingId])
+  @@index([externalChargeId])
+}
+
+/// Append-only record of gateway callbacks. The unique key gives webhook
+/// idempotency: replaying an event can never apply its effect twice.
+model PaymentEvent {
+  id        String   @id @default(cuid())
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  gateway         String
+  externalEventId String
+  type            String
+  payload         Json
+  processedAt     DateTime? @db.Timestamptz(3)
+  processingError String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([gateway, externalEventId])
+  @@index([paymentId])
+}
+
+model PayoutBatch {
+  id         String   @id @default(cuid())
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+  periodStart DateTime @db.Timestamptz(3)
+  periodEnd   DateTime @db.Timestamptz(3)
+  status      PayoutStatus @default(DRAFT)
+
+  grossMinor      Int @default(0)
+  commissionMinor Int @default(0)
+  netMinor        Int @default(0)
+  currency        String @default("THB")
+
+  paidAt DateTime? @db.Timestamptz(3)
+  lines  PayoutLine[]
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, periodStart])
+}
+
+model PayoutLine {
+  id      String      @id @default(cuid())
+  batchId String
+  batch   PayoutBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  bookingId String
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  grossMinor      Int
+  commissionBps   Int
+  commissionMinor Int
+  netMinor        Int
+
+  @@unique([batchId, bookingId])
+}
+
+// ---------------------------------------------------------------------------
+// Reviews, moderation, notifications, audit
+// ---------------------------------------------------------------------------
+
+model Review {
+  id        String  @id @default(cuid())
+  bookingId String  @unique
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  providerId String
+  provider   Provider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  customerId String
+  customer   User     @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  rating  Int
+  comment String? @db.Text
+  status  ReviewStatus @default(PUBLISHED)
+
+  /// Marks seeded sample content so the UI can label it honestly.
+  isSample Boolean @default(false)
+
+  providerReply   String?   @db.Text
+  providerRepliedAt DateTime? @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([providerId, status])
+  @@index([customerId])
+}
+
+model ModerationCase {
+  id         String   @id @default(cuid())
+  providerId String?
+  provider   Provider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+
+  entityType String
+  entityId   String
+  reason     String
+  detail     String? @db.Text
+  status     ModerationStatus @default(OPEN)
+
+  resolvedById String?
+  resolvedAt   DateTime? @db.Timestamptz(3)
+  resolution   String?  @db.Text
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([status])
+}
+
+model Notification {
+  id     String @id @default(cuid())
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Set when the notification is addressed to a clinic rather than a person.
+  providerId String?
+
+  event   NotificationEvent
+  channel NotificationChannel
+  status  NotificationStatus  @default(PENDING)
+
+  toAddress String?
+  subject   String?
+  body      String  @db.Text
+  payload   Json?
+
+  sentAt      DateTime? @db.Timestamptz(3)
+  failedAt    DateTime? @db.Timestamptz(3)
+  errorMessage String?
+  readAt      DateTime? @db.Timestamptz(3)
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([userId, createdAt])
+  @@index([providerId, createdAt])
+  @@index([status])
+}
+
+/// Immutable record of consequential actions. Written by admin and provider
+/// mutations; never updated or deleted through the application.
+model AuditLog {
+  id String @id @default(cuid())
+
+  actorId   String?
+  actor     User?     @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  actorRole ActorRole @default(SYSTEM)
+  actorLabel String?
+
+  action     String
+  entityType String
+  entityId   String
+  /// Set when the action concerns a specific clinic, so a tenant view is easy.
+  providerId String?
+
+  summary  String?
+  metadata Json?
+  ip       String?
+
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([providerId, createdAt])
+  @@index([actorId, createdAt])
+  @@index([action])
+}
+
+/// Commercial and operational knobs kept out of the code so they can change
+/// without a deploy (commission, deposit %, cancellation window, hold length).
+model PlatformSetting {
+  key         String @id
+  value       Json
+  description String?
+
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+  updatedById String?
+}
