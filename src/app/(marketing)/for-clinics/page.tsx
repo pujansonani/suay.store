@@ -56,7 +56,7 @@ export default function ForClinicsPage() {
 
       <section className="container-page py-12 md:py-16">
         <h2 className="text-xl font-semibold text-navy-600">What you get</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {CAPABILITIES.map((item) => (
             <article key={item.title} className="rounded-lg border border-line bg-surface p-5">
               <item.icon aria-hidden className="size-5 text-teal-500" />
@@ -74,7 +74,7 @@ export default function ForClinicsPage() {
             Every clinic is reviewed before it appears publicly. That review is what the verified
             badge on your profile actually stands for.
           </p>
-          <ol className="mt-6 grid gap-6 md:grid-cols-4">
+          <ol className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4">
             {STEPS.map((step, index) => (
               <li key={step.title} className="border-t-2 border-teal-500 pt-4">
                 <span className="text-[0.75rem] font-semibold text-teal-600 tabular">

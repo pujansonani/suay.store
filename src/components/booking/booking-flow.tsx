@@ -332,7 +332,7 @@ export function BookingFlow({
         </div>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
         <div className="min-w-0">
           <StepTransition stepKey={stage} direction={direction}>
             {stage === "time" && (
@@ -520,7 +520,7 @@ export function BookingFlow({
                       )}
                     </Field>
 
-                    <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <Field label="Email" error={fieldErrors.customerEmail} required>
                         {(props) => (
                           <Input
@@ -615,7 +615,7 @@ export function BookingFlow({
                     <legend className="text-[0.8125rem] font-medium text-navy-600">
                       Payment method
                     </legend>
-                    <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                       {(
                         [
                           { value: "CARD", label: "Card", icon: CreditCard, note: "Simulated authorisation and capture" },

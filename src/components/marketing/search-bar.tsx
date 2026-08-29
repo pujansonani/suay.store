@@ -48,7 +48,7 @@ export function SearchBar({
       className={
         hero
           ? "grid gap-2 rounded-lg border border-line bg-surface p-2 shadow-[var(--shadow-raised)] sm:grid-cols-[1fr_1fr_auto]"
-          : "grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
+          : "grid grid-cols-1 gap-2 sm:grid-cols-[1fr_1fr_auto]"
       }
     >
       <div className="relative">

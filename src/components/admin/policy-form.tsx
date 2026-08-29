@@ -80,7 +80,7 @@ export function PolicyForm({ policy }: { policy: PlatformPolicy }) {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardBody className="grid gap-4 sm:grid-cols-2">
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field
             label="Payment hold (minutes)"
             hint="How long a slot is reserved while a patient pays. Expired holds return the slot to the calendar."
@@ -109,7 +109,7 @@ export function PolicyForm({ policy }: { policy: PlatformPolicy }) {
           </div>
         </CardHeader>
         <CardBody className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Free cancellation window (hours)">
               {(p) => <Input {...p} type="number" min={0} max={168} {...num("cancellationFreeHours")} />}
             </Field>
@@ -144,7 +144,7 @@ export function PolicyForm({ policy }: { policy: PlatformPolicy }) {
             </CardDescription>
           </div>
         </CardHeader>
-        <CardBody className="grid gap-4 sm:grid-cols-2">
+        <CardBody className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Platform commission (%)">
             {(p) => (
               <Input

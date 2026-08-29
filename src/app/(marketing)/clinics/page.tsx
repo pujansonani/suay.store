@@ -120,7 +120,7 @@ export default async function ClinicsPage({ searchParams }: { searchParams: Sear
             </div>
           ) : (
             <Suspense fallback={<CardSkeleton />}>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {withAvailability.map(({ clinic, nextAvailable }, index) => (
                   <ClinicCard
                     key={clinic.id}

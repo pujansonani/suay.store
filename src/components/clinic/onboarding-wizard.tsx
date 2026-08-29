@@ -223,7 +223,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
               title="Business information"
               description="The registered details of the business operating the clinic."
             >
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Clinic name" required>
                   {(p) => (
                     <Input
@@ -245,7 +245,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                 </Field>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Contact email" required>
                   {(p) => (
                     <Input
@@ -278,7 +278,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                 )}
               </Field>
 
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <Field label="District" optional>
                   {(p) => (
                     <Input
@@ -494,7 +494,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
               title="Verification"
               description="Suay checks these details before your clinic can be listed. This is what the verified badge on your profile stands for."
             >
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="Business registration number" required>
                   {(p) => (
                     <Input
@@ -555,7 +555,7 @@ export function OnboardingWizard({ initial }: { initial: OnboardingState }) {
                 <legend className="text-[0.8125rem] font-semibold text-navy-600">
                   Person responsible
                 </legend>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Field label="Name" required>
                     {(p) => (
                       <Input
@@ -962,7 +962,7 @@ function StaffStep({
         </ul>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Full name">
           {(p) => <Input {...p} value={name} onChange={(e) => setName(e.target.value)} data-autofocus />}
         </Field>
@@ -978,7 +978,7 @@ function StaffStep({
           <legend className="px-1 text-[0.8125rem] font-medium text-navy-600">
             Treatments they perform
           </legend>
-          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
             {services.map((service) => (
               <Checkbox
                 key={service.id}

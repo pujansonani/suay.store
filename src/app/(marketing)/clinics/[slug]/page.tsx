@@ -236,7 +236,7 @@ export default async function ClinicProfilePage({ params }: { params: Promise<{ 
                 <EmptyState title="No practitioners listed" description="This clinic has not published practitioner details." />
               </div>
             ) : (
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {clinic.staff.map((member, index) => (
                   <Reveal key={member.id} index={index}>
                     <article className="h-full rounded-lg border border-line bg-surface p-4">

@@ -58,7 +58,7 @@ export default async function ClinicDashboardPage() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatTile
           label="Today's appointments"
           value={String(data.metrics.todayCount)}
@@ -102,7 +102,7 @@ export default async function ClinicDashboardPage() {
         />
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-[1.6fr_1fr]">
+      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader>
             <div>

@@ -14,7 +14,7 @@ async function look(email, path) {
   await p.goto(BASE + path, { waitUntil: 'networkidle' });
   await p.waitForTimeout(800);
   const out = await p.evaluate(() => {
-    const sw = document.documentElement.scrollWidth;
+    const sw = document.body.scrollWidth;
     const vw = document.documentElement.clientWidth;
     // The chain of ancestors of the element that reaches furthest right.
     // Ignore anything already inside a horizontal scroll container: that
@@ -49,6 +49,5 @@ async function look(email, path) {
   out.chain.forEach((l,i) => console.log('  '.repeat(1) + ' '.repeat(i) + l));
   await ctx.close();
 }
-await look('clinic@demo.suay.store', '/clinic/bookings');
-await look('admin@demo.suay.store', '/admin');
+await look('clinic@demo.suay.store', '/clinic/dashboard');
 await b.close();

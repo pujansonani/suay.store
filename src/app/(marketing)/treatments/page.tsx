@@ -78,7 +78,7 @@ export default async function TreatmentsPage({
             />
           </div>
         ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {result.services.map((service, index) => (
               <Reveal key={service.id} index={index} className="h-full">
                 <article className="flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-[border-color,box-shadow] hover:border-line-strong hover:shadow-[var(--shadow-card)]">

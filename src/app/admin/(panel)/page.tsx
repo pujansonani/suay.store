@@ -35,7 +35,7 @@ export default async function AdminOverviewPage() {
         description="Every clinic, booking and payment on Suay. Figures here are platform-wide."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatTile
           label="Clinics"
           value={String(data.providers.total)}
@@ -76,7 +76,7 @@ export default async function AdminOverviewPage() {
         />
       </div>
 
-      <div className="mt-6 grid gap-5 xl:grid-cols-2">
+      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
         <Card>
           <CardHeader>
             <div>

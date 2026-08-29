@@ -189,7 +189,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 function ProfileTab({ clinic, members, resources, locale }: Props) {
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       <Panel title="Clinic information">
         <dl className="divide-y divide-line">
           <Row label="Trading name" value={clinic.name} />
@@ -285,7 +285,7 @@ function VerificationTab({ verification, clinic }: Props) {
   }
 
   return (
-    <div className="grid gap-5 xl:grid-cols-2">
+    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
       <Panel title="Business registration">
         <dl className="divide-y divide-line">
           <Row label="Registration number" value={verification.businessRegistrationNo} />

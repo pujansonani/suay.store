@@ -276,7 +276,7 @@ export function PractitionersManager({
         <div className="space-y-4">
           {error && <FormError>{error}</FormError>}
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Full name" error={fieldErrors.name} required>
               {(props) => (
                 <Input
@@ -309,7 +309,7 @@ export function PractitionersManager({
             )}
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Areas of focus" hint="Comma separated." optional>
               {(props) => (
                 <Input
@@ -332,7 +332,7 @@ export function PractitionersManager({
             </Field>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Qualifications" hint="One per line." optional>
               {(props) => (
                 <Textarea
@@ -380,7 +380,7 @@ export function PractitionersManager({
             {services.length === 0 ? (
               <p className="text-[0.8125rem] text-ink-muted">Add a treatment first.</p>
             ) : (
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+              <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {services.map((service) => (
                   <Checkbox
                     key={service.id}

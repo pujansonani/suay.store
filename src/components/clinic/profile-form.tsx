@@ -77,7 +77,7 @@ export function ClinicProfileForm({ defaults }: { defaults: ClinicProfileValues 
     <form onSubmit={onSubmit} className="space-y-5" noValidate>
       {error && <FormError>{error}</FormError>}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Clinic name" error={fieldErrors.name} required>
           {(props) => <Input {...props} value={values.name} onChange={(e) => set("name", e.target.value)} required />}
         </Field>
@@ -88,7 +88,7 @@ export function ClinicProfileForm({ defaults }: { defaults: ClinicProfileValues 
         </Field>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Speciality" hint="Shown under your clinic name." optional>
           {(props) => (
             <Input
@@ -123,7 +123,7 @@ export function ClinicProfileForm({ defaults }: { defaults: ClinicProfileValues 
 
       <fieldset className="space-y-4">
         <legend className="text-[0.8125rem] font-semibold text-navy-600">Contact</legend>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Email" error={fieldErrors.email} optional>
             {(props) => (
               <Input {...props} type="email" value={values.email} onChange={(e) => set("email", e.target.value)} />
@@ -156,7 +156,7 @@ export function ClinicProfileForm({ defaults }: { defaults: ClinicProfileValues 
             />
           )}
         </Field>
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Field label="District" optional>
             {(props) => (
               <Input {...props} value={values.district} onChange={(e) => set("district", e.target.value)} />

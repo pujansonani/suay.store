@@ -83,7 +83,7 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category, index) => (
               <Reveal key={category.id} index={index}>
                 <Link
@@ -124,7 +124,7 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {withAvailability.map(({ clinic, nextAvailable }, index) => (
               <ClinicCard
                 key={clinic.id}
@@ -141,7 +141,7 @@ export default async function HomePage() {
       {/* How it works. */}
       <section className="container-page py-12 md:py-16">
         <h2 className="text-xl font-semibold text-navy-600">{t.home.howTitle}</h2>
-        <ol className="mt-6 grid gap-6 md:grid-cols-3">
+        <ol className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">
           {[
             { title: t.home.howStep1Title, body: t.home.howStep1Body },
             { title: t.home.howStep2Title, body: t.home.howStep2Body },

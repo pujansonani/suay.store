@@ -36,7 +36,7 @@ export default async function AdminPaymentsPage({
         description="Every payment across the platform. This deployment uses a simulated gateway — no card data is collected and no money moves."
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatTile
           label="Captured"
           value={formatMoneyShort(result.grossMinor, "THB", locale)}

@@ -366,7 +366,7 @@ export function TreatmentsManager({
             )}
           </Field>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Category">
               {(props) => (
                 <Select
@@ -406,7 +406,7 @@ export function TreatmentsManager({
             </Field>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Duration (min)" error={fieldErrors.durationMinutes} required>
               {(props) => (
                 <Input
@@ -458,7 +458,7 @@ export function TreatmentsManager({
                 Add a practitioner first — no times can be offered without one.
               </p>
             ) : (
-              <div className="grid gap-2 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {staff.map((member) => (
                   <Checkbox
                     key={member.id}

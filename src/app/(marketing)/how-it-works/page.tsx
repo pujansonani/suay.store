@@ -57,7 +57,7 @@ export default function HowItWorksPage() {
       </div>
 
       <div className="container-page py-12">
-        <ol className="grid gap-6 md:grid-cols-2">
+        <ol className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {STEPS.map((step, index) => (
             <li key={step.title} className="rounded-lg border border-line bg-surface p-5">
               <div className="flex items-center gap-2.5">
@@ -76,7 +76,7 @@ export default function HowItWorksPage() {
 
         <section className="mt-12">
           <h2 className="text-lg font-semibold text-navy-600">Trust and verification</h2>
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             {TRUST.map((item) => (
               <article key={item.title} className="rounded-lg border border-line bg-surface p-5">
                 <div className="flex items-start gap-3">

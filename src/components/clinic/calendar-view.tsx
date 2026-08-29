@@ -531,7 +531,7 @@ function BlockTimeDialog({
             </Field>
 
             {type !== "CLOSED" && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field label="From" required>
                   {(props) => (
                     <Input {...props} type="time" value={from} onChange={(e) => setFrom(e.target.value)} />

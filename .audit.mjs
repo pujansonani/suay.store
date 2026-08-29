@@ -32,7 +32,15 @@ async function audit(page, path, label) {
   const onMsg = m => { if (m.type()==='error' && !m.text().includes('Failed to load resource')) errors.push(m.text().slice(0,160)); };
   page.on('pageerror', onErr); page.on('console', onMsg);
 
-  const res = await page.goto(BASE + path, { waitUntil: 'networkidle' });
+  let res;
+  try {
+    res = await page.goto(BASE + path, { waitUntil: 'networkidle', timeout: 90000 });
+  } catch {
+    page.off('pageerror', onErr); page.off('console', onMsg);
+    console.log(`ISSUE ${String(page.viewportSize().width).padEnd(5)} ${label.padEnd(24)} navigation timed out`);
+    problems.push({ label, width: page.viewportSize().width, issues: ['timeout'] });
+    return;
+  }
   await page.waitForTimeout(700);
 
   const status = res?.status() ?? 0;

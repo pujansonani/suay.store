@@ -103,7 +103,7 @@ export default async function TreatmentPage({ params }: { params: Promise<{ id: 
               provided by the clinic; in this demonstration environment they are fictional samples.
             </p>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
               {service.staffLinks.map((link, index) => (
                 <Reveal key={link.staff.id} index={index}>
                   <article className="h-full rounded-lg border border-line bg-surface p-4">
